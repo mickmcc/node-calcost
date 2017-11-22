@@ -1,0 +1,58 @@
+{
+  "name": "calcost",
+  "version": "1.0.0",
+  "description": "Node.js module to calculate the cost of resource usage using time-based rules.",
+  "main": "index.js",
+  "directories": {
+    "doc": "docs",
+    "lib": "lib",
+    "test": "test"
+  },
+  "engines": {
+    "node": "*"
+  },
+  "scripts": {
+    "test-costrule": "./node_modules/.bin/mocha test/unit-costrule.js",
+    "test": "npm run -s test-costrule",
+    "lint": "./node_modules/.bin/eslint index.js && ./node_modules/.bin/eslint lib && ./node_modules/.bin/eslint test",
+    "doc": "./node_modules/.bin/jsdoc -d docs README.md index.js lib/"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/mickmcc/node-calcost.git"
+  },
+  "keywords": [
+    "cost",
+    "rate",
+    "time",
+    "date",
+    "timespan",
+    "time-span",
+    "timezone",
+    "resource"
+  ],
+  "author": "Michael McCarthy",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/mickmcc/node-calcost/issues"
+  },
+  "homepage": "https://github.com/mickmcc/node-calcost",
+  "devDependencies": {
+    "eslint": "latest",
+    "eslint-config-google": "latest",
+    "jsdoc": "latest",
+    "mocha": "latest"
+  },
+  "dependencies": {
+    "caltime": "latest"
+  },
+  "files": [
+    "package.json",
+    "index.js",
+    "LICENCE",
+    "README.md",
+    "doc",
+    "test",
+    "lib"
+  ]
+}
