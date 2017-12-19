@@ -78,7 +78,90 @@ describe('CostRule - Instantiation', function() {
     assert.notEqual(timerule, null, 'TimeRule object was not constructed.');
     let costrule = tc.costruleCtor(timerule,
                                     1.0,
-                                    tc.constants.RATETYPE_PER_HOUR_FRACTIONAL);
+                                    tc.constants.RATETYPE_PER_HOUR_NATURAL);
     assert.notEqual(costrule, null, 'CostRule object was not constructed.');
+  });
+
+  it('Attempt to create a CostRule with invalid arguments', function() {
+    const timespan = caltime.timeSpan(9, 0, 0, 0, 60);
+    assert.throws(function() {
+                     tc.costruleCtor(null,
+                                      caltime.constants.CONSTRAINT_DAY_OF_WEEK,
+                                      caltime.constants.MONDAY,
+                                      TZ_UTC);
+                    },
+                    Error,
+                    'Expected functional constructor to throw an error (inDurationMins).');
+    assert.throws(function() {
+                    tc.costruleCtor(timespan,
+                                      null,
+                                      caltime.constants.MONDAY,
+                                      TZ_UTC);
+                  },
+                  Error,
+                  'Expected functional constructor to throw an error (inDurationMins).');
+    assert.throws(function() {
+                    tc.costruleCtor(timespan,
+                                      caltime.constants.CONSTRAINT_DAY_OF_WEEK,
+                                      null,
+                                      TZ_UTC);
+                  },
+                  Error,
+                  'Expected functional constructor to throw an error (inDurationMins).');
+    assert.throws(function() {
+                    tc.costruleCtor(timespan,
+                                      caltime.constants.CONSTRAINT_DAY_OF_WEEK,
+                                      caltime.constants.MONDAY,
+                                      null);
+                  },
+                  Error,
+                  'Expected functional constructor to throw an error (inDurationMins).');
+
+  });
+});
+
+describe('CostRule - Calculate Total Cost', function() {
+  it('Bad Argument', function() {
+    const timespan = caltime.timeSpan(9, 0, 0, 0, 12*60); // 9:00-21:00
+    const timerule = caltime.timeRule(timespan,
+                                        caltime.constants.CONSTRAINT_DAY_OF_WEEK,
+                                        caltime.constants.SATURDAY,
+                                        TZ_UTC);
+    assert.notEqual(timerule, null, 'TimeRule object was not constructed.');
+    let costrule = tc.costruleCtor(timerule,
+                                    1.0,
+                                    tc.constants.RATETYPE_PER_HOUR_NATURAL);
+    assert.notEqual(costrule, null, 'CostRule object was not constructed.');
+    const argObject = {};
+    // incorrect arguments passed to method
+    assert.throws(function() {
+                     costrule.totalCost(null);
+                    },
+                    Error,
+                    'Expected function to throw an error (inDateSpans is null).');
+    assert.throws(function() {
+                     costrule.totalCost(argObject);
+                    },
+                    Error,
+                    'Expected function to throw an error (inDateSpans is an object).');
+  });
+
+  it('Single overlap with DateSpan', function() {
+    const timespan = caltime.timeSpan(9, 0, 0, 0, 12*60); // 9:00-21:00
+    const timerule = caltime.timeRule(timespan,
+                                        caltime.constants.CONSTRAINT_DAY_OF_WEEK,
+                                        caltime.constants.SATURDAY,
+                                        TZ_UTC);
+    assert.notEqual(timerule, null, 'TimeRule object was not constructed.');
+    let costrule = tc.costruleCtor(timerule,
+                                    1.0,
+                                    tc.constants.RATETYPE_PER_HOUR_NATURAL);
+    assert.notEqual(costrule, null, 'CostRule object was not constructed.');
+    // create an array of DateSpans
+    const spanH = caltime.dateSpan(dateH, null, 60);
+    const datespans = [spanH];
+    // calculate the total cost
+    let result = costrule.totalCost(datespans);
+    assert.equal(result, 1.0, 'Incorrect total cost');
   });
 });
