@@ -146,14 +146,35 @@ describe('CostRule - Calculate Total Cost', function() {
                     'Expected function to throw an error (inDateSpans is an object).');
   });
 
-  it('Single overlap with DateSpan', function() {
+  it('Single overlap with DateSpan - Per Pro-Rata Milliseconds', function() {
     const timespan = caltime.timeSpan(9, 0, 0, 0, 12*60); // 9:00-21:00
     const timerule = caltime.timeRule(timespan,
                                         caltime.constants.CONSTRAINT_DAY_OF_WEEK,
                                         caltime.constants.SATURDAY,
                                         TZ_UTC);
     assert.notEqual(timerule, null, 'TimeRule object was not constructed.');
-    let costrule = tc.costruleCtor(timerule,
+    const costrule = tc.costruleCtor(timerule,
+                                      1.0,
+                                      tc.constants.RATETYPE_PER_MILLISECOND);
+    assert.notEqual(costrule, null, 'CostRule object was not constructed.');
+    // create an array of DateSpans
+    const spanH = caltime.dateSpan(dateH, null, 60);
+    const datespans = [spanH];
+    // calculate the total cost
+    const result = costrule.totalCost(datespans);
+    assert.notEqual(result, null, 'null not expected');
+    assert.equal(typeof result, 'object', 'Expected method to return an object.');
+    assert.equal(result.cost, (1.0 * caltime.constants.MSECS_PER_HOUR) , 'Incorrect total cost');
+  });
+
+  it('Single overlap with DateSpan - Per Natural Hour', function() {
+    const timespan = caltime.timeSpan(9, 0, 0, 0, 12*60); // 9:00-21:00
+    const timerule = caltime.timeRule(timespan,
+                                        caltime.constants.CONSTRAINT_DAY_OF_WEEK,
+                                        caltime.constants.SATURDAY,
+                                        TZ_UTC);
+    assert.notEqual(timerule, null, 'TimeRule object was not constructed.');
+    const costrule = tc.costruleCtor(timerule,
                                     1.0,
                                     tc.constants.RATETYPE_PER_HOUR_NATURAL);
     assert.notEqual(costrule, null, 'CostRule object was not constructed.');
@@ -161,7 +182,9 @@ describe('CostRule - Calculate Total Cost', function() {
     const spanH = caltime.dateSpan(dateH, null, 60);
     const datespans = [spanH];
     // calculate the total cost
-    let result = costrule.totalCost(datespans);
-    assert.equal(result, 1.0, 'Incorrect total cost');
+    const result = costrule.totalCost(datespans);
+    assert.notEqual(result, null, 'null not expected');
+    assert.equal(typeof result, 'object', 'Expected method to return an object.');
+    assert.equal(result.cost, 1.0, 'Incorrect total cost');
   });
 });
