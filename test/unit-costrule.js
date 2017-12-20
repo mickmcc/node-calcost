@@ -51,6 +51,10 @@ const TZ_UTC = 'Etc/UTC'; // UTC timezone
 const TZ_PLUS_FOUR = 'Asia/Dubai'; // UTC+4 timezone
 const TZ_MINUS_FOUR = 'America/Antigua'; // UTC-4 timezone
 
+/* constants */
+/* seconds per hour */
+const SECS_PER_HOUR = (60 * 60);
+
 before(function() {
 
 });
@@ -121,6 +125,7 @@ describe('CostRule - Instantiation', function() {
 });
 
 describe('CostRule - Calculate Total Cost', function() {
+
   it('Bad Argument', function() {
     const timespan = caltime.timeSpan(9, 0, 0, 0, 12*60); // 9:00-21:00
     const timerule = caltime.timeRule(timespan,
@@ -146,7 +151,8 @@ describe('CostRule - Calculate Total Cost', function() {
                     'Expected function to throw an error (inDateSpans is an object).');
   });
 
-  it('Single overlap with DateSpan - Per Pro-Rata Milliseconds', function() {
+  /* pro-rata rates */
+  it('Single overlap - Pro-Rata Milliseconds', function() {
     const timespan = caltime.timeSpan(9, 0, 0, 0, 12*60); // 9:00-21:00
     const timerule = caltime.timeRule(timespan,
                                         caltime.constants.CONSTRAINT_DAY_OF_WEEK,
@@ -158,16 +164,80 @@ describe('CostRule - Calculate Total Cost', function() {
                                       tc.constants.RATETYPE_PER_MILLISECOND);
     assert.notEqual(costrule, null, 'CostRule object was not constructed.');
     // create an array of DateSpans
-    const spanH = caltime.dateSpan(dateH, null, 60);
+    const spanH = caltime.dateSpan(dateH, null, 60, 4, 200); // 60 m, 4 sec, 200 msecs.
     const datespans = [spanH];
     // calculate the total cost
     const result = costrule.totalCost(datespans);
     assert.notEqual(result, null, 'null not expected');
     assert.equal(typeof result, 'object', 'Expected method to return an object.');
-    assert.equal(result.cost, (1.0 * caltime.constants.MSECS_PER_HOUR) , 'Incorrect total cost');
+    assert.equal(result.cost, 1.0 * ((60.0*caltime.constants.MSECS_PER_MIN)+(4.0*caltime.constants.MSECS_PER_SEC)+(200.0)), 'Incorrect total cost');
   });
 
-  it('Single overlap with DateSpan - Per Natural Hour', function() {
+  it('Single overlap - Pro-Rata Seconds', function() {
+    const timespan = caltime.timeSpan(9, 0, 0, 0, 12*60); // 9:00-21:00
+    const timerule = caltime.timeRule(timespan,
+                                        caltime.constants.CONSTRAINT_DAY_OF_WEEK,
+                                        caltime.constants.SATURDAY,
+                                        TZ_UTC);
+    assert.notEqual(timerule, null, 'TimeRule object was not constructed.');
+    const costrule = tc.costruleCtor(timerule,
+                                      1.0,
+                                      tc.constants.RATETYPE_PER_SECOND_PRORATA);
+    assert.notEqual(costrule, null, 'CostRule object was not constructed.');
+    // create an array of DateSpans
+    const spanH = caltime.dateSpan(dateH, null, 60, 33, 0); // 60 mins, 33 seconds
+    const datespans = [spanH];
+    // calculate the total cost
+    const result = costrule.totalCost(datespans);
+    assert.notEqual(result, null, 'null not expected');
+    assert.equal(typeof result, 'object', 'Expected method to return an object.');
+    assert.equal(result.cost, 1.0*(SECS_PER_HOUR+33), 'Incorrect total cost');
+  });
+
+  it('Single overlap - Pro-Rata Minutes', function() {
+    const timespan = caltime.timeSpan(9, 0, 0, 0, 12*60); // 9:00-21:00
+    const timerule = caltime.timeRule(timespan,
+                                        caltime.constants.CONSTRAINT_DAY_OF_WEEK,
+                                        caltime.constants.SATURDAY,
+                                        TZ_UTC);
+    assert.notEqual(timerule, null, 'TimeRule object was not constructed.');
+    const costrule = tc.costruleCtor(timerule,
+                                      1.0,
+                                      tc.constants.RATETYPE_PER_MINUTE_PRORATA);
+    assert.notEqual(costrule, null, 'CostRule object was not constructed.');
+    // create an array of DateSpans
+    const spanH = caltime.dateSpan(dateH, null, 60, 30, 0); // 60.5 minutes
+    const datespans = [spanH];
+    // calculate the total cost
+    const result = costrule.totalCost(datespans);
+    assert.notEqual(result, null, 'null not expected');
+    assert.equal(typeof result, 'object', 'Expected method to return an object.');
+    assert.equal(result.cost, (1.0 * 60.5) , 'Incorrect total cost');
+  });
+
+  it('Single overlap - Pro-Rata Hours', function() {
+    const timespan = caltime.timeSpan(9, 0, 0, 0, 12*60); // 9:00-21:00
+    const timerule = caltime.timeRule(timespan,
+                                        caltime.constants.CONSTRAINT_DAY_OF_WEEK,
+                                        caltime.constants.SATURDAY,
+                                        TZ_UTC);
+    assert.notEqual(timerule, null, 'TimeRule object was not constructed.');
+    const costrule = tc.costruleCtor(timerule,
+                                      1.0,
+                                      tc.constants.RATETYPE_PER_HOUR_PRORATA);
+    assert.notEqual(costrule, null, 'CostRule object was not constructed.');
+    // create an array of DateSpans
+    const spanH = caltime.dateSpan(dateH, null, 90); // 1.5 hours
+    const datespans = [spanH];
+    // calculate the total cost
+    const result = costrule.totalCost(datespans);
+    assert.notEqual(result, null, 'null not expected');
+    assert.equal(typeof result, 'object', 'Expected method to return an object.');
+    assert.equal(result.cost, (1.0*1.5), 'Incorrect total cost');
+  });
+
+  /* natural rates */
+  it('Single overlap - Natural Hour', function() {
     const timespan = caltime.timeSpan(9, 0, 0, 0, 12*60); // 9:00-21:00
     const timerule = caltime.timeRule(timespan,
                                         caltime.constants.CONSTRAINT_DAY_OF_WEEK,
@@ -186,5 +256,27 @@ describe('CostRule - Calculate Total Cost', function() {
     assert.notEqual(result, null, 'null not expected');
     assert.equal(typeof result, 'object', 'Expected method to return an object.');
     assert.equal(result.cost, 1.0, 'Incorrect total cost');
+  });
+
+  /* roundup rates */
+  it('Single overlap - Roundup Seconds', function() {
+    const timespan = caltime.timeSpan(9, 0, 0, 0, 12*60); // 9:00-21:00
+    const timerule = caltime.timeRule(timespan,
+                                        caltime.constants.CONSTRAINT_DAY_OF_WEEK,
+                                        caltime.constants.SATURDAY,
+                                        TZ_UTC);
+    assert.notEqual(timerule, null, 'TimeRule object was not constructed.');
+    const costrule = tc.costruleCtor(timerule,
+                                      1.0,
+                                      tc.constants.RATETYPE_PER_SECOND_ROUNDUP);
+    assert.notEqual(costrule, null, 'CostRule object was not constructed.');
+    // create an array of DateSpans
+    const spanH = caltime.dateSpan(dateH, null, 60, 20, 200);
+    const datespans = [spanH];
+    // calculate the total cost
+    const result = costrule.totalCost(datespans);
+    assert.notEqual(result, null, 'null not expected');
+    assert.equal(typeof result, 'object', 'Expected method to return an object.');
+    assert.equal(result.cost, 1.0*(SECS_PER_HOUR+20+1), 'Incorrect total cost');
   });
 });
