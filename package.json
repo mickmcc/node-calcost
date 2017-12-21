@@ -44,7 +44,7 @@
     "mocha": "latest"
   },
   "dependencies": {
-    "caltime": "^1.4.1"
+    "caltime": "^1.4.2"
   },
   "files": [
     "package.json",

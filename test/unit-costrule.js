@@ -28,6 +28,7 @@ const dateE = new Date(Date.UTC(2017, 6, 12, 17, 0, 0, 0)); // Second Wed. of Ju
 const dateF = new Date(Date.UTC(2017, 6, 14, 12, 0, 0, 0)); // Friday 14th, 12:00
 const dateG = new Date(Date.UTC(2017, 6, 15, 10, 0, 0, 0)); // Saturday 15th, 10:00
 const dateH = new Date(Date.UTC(2017, 6, 15, 12, 0, 0, 0)); // Saturday 15th, 12:00
+const dateHa = new Date(Date.UTC(2017, 6, 15, 12, 1, 2, 300)); // Saturday 15th, 12:01:02:300
 const dateI = new Date(Date.UTC(2017, 6, 15, 13, 0, 0, 0)); // Saturday 15th, 13:00
 const dateJ = new Date(Date.UTC(2017, 6, 15, 14, 0, 0, 0)); // Saturday 15th, 14:00
 const dateK = new Date(Date.UTC(2017, 6, 15, 16, 0, 0, 0)); // Saturday 15th, 16:00
@@ -237,7 +238,28 @@ describe('CostRule - Calculate Total Cost', function() {
   });
 
   /* natural rates */
-  it('Single overlap - Natural Hour', function() {
+  it('Single overlap - Natural Minute', function() {
+    const timespan = caltime.timeSpan(9, 0, 0, 0, 12*60); // 9:00-21:00
+    const timerule = caltime.timeRule(timespan,
+                                        caltime.constants.CONSTRAINT_DAY_OF_WEEK,
+                                        caltime.constants.SATURDAY,
+                                        TZ_UTC);
+    assert.notEqual(timerule, null, 'TimeRule object was not constructed.');
+    const costrule = tc.costruleCtor(timerule,
+                                    1.0,
+                                    tc.constants.RATETYPE_PER_MINUTE_NATURAL);
+    assert.notEqual(costrule, null, 'CostRule object was not constructed.');
+    // create an array of DateSpans
+    let span = caltime.dateSpan(dateH, null, 30, 20, 0); // 30 mins, 20 secs.
+    const datespans = [span];
+    // calculate the total cost
+    const result = costrule.totalCost(datespans);
+    assert.notEqual(result, null, 'null not expected');
+    assert.equal(typeof result, 'object', 'Expected method to return an object.');
+    assert.equal(result.cost, 31, 'Incorrect total cost');
+  });
+
+  it('Two overlaps - Natural Hour', function() {
     const timespan = caltime.timeSpan(9, 0, 0, 0, 12*60); // 9:00-21:00
     const timerule = caltime.timeRule(timespan,
                                         caltime.constants.CONSTRAINT_DAY_OF_WEEK,
@@ -248,13 +270,64 @@ describe('CostRule - Calculate Total Cost', function() {
                                     1.0,
                                     tc.constants.RATETYPE_PER_HOUR_NATURAL);
     assert.notEqual(costrule, null, 'CostRule object was not constructed.');
+    // first test with single DateSpan in array
+    const spanA = caltime.dateSpan(dateG, null, 45); // 10:00:00:000 - 10:45:00:000
+    const datespans = [spanA];
+    // calculate the total cost
+    let result = costrule.totalCost(datespans);
+    assert.notEqual(result, null, 'null not expected');
+    assert.equal(typeof result, 'object', 'Expected method to return an object.');
+    assert.equal(result.cost, 1.0, 'Incorrect total cost');
+    // then test with two DateSpans in array
+    const spanB = caltime.dateSpan(dateHa, null, 70); // 12:01:02:300 - 13:11:02:300
+    datespans.push(spanB);
+    // calculate the total cost
+    result = costrule.totalCost(datespans);
+    assert.notEqual(result, null, 'null not expected');
+    assert.equal(typeof result, 'object', 'Expected method to return an object.');
+    assert.equal(result.cost, 3.0, 'Incorrect total cost');
+  });
+
+  it('Single overlap - Natural Day, 1 day', function() {
+    const timespan = caltime.timeSpan(9, 0, 0, 0, 12*60); // 9:00-21:00
+    const timerule = caltime.timeRule(timespan,
+                                        caltime.constants.CONSTRAINT_DAY_OF_WEEK,
+                                        caltime.constants.SATURDAY,
+                                        TZ_UTC);
+    assert.notEqual(timerule, null, 'TimeRule object was not constructed.');
+    const costrule = tc.costruleCtor(timerule,
+                                    1.0,
+                                    tc.constants.RATETYPE_PER_DAY_NATURAL);
+    assert.notEqual(costrule, null, 'CostRule object was not constructed.');
     // create an array of DateSpans
-    const spanH = caltime.dateSpan(dateH, null, 60);
-    const datespans = [spanH];
+    let span = caltime.dateSpan(dateH, null, 30); // 30 mins.
+    const datespans = [span];
     // calculate the total cost
     const result = costrule.totalCost(datespans);
     assert.notEqual(result, null, 'null not expected');
     assert.equal(typeof result, 'object', 'Expected method to return an object.');
+    assert.equal(result.cost, 1.0, 'Incorrect total cost');
+  });
+
+  it('Single overlap - Natural Day, 2 days', function() {
+    const timespan = caltime.timeSpan(9, 0, 0, 0, 12*60); // 9:00-21:00
+    const timerule = caltime.timeRule(timespan,
+                                        caltime.constants.CONSTRAINT_DAY_OF_WEEK,
+                                        caltime.constants.SATURDAY,
+                                        TZ_UTC);
+    assert.notEqual(timerule, null, 'TimeRule object was not constructed.');
+    const costrule = tc.costruleCtor(timerule,
+                                    1.0,
+                                    tc.constants.RATETYPE_PER_DAY_NATURAL);
+    assert.notEqual(costrule, null, 'CostRule object was not constructed.');
+    // create an array of DateSpans
+    let span = caltime.dateSpan(dateH, null, 24*60); // 24 hours
+    const datespans = [span];
+    // calculate the total cost
+    const result = costrule.totalCost(datespans);
+    assert.notEqual(result, null, 'null not expected');
+    assert.equal(typeof result, 'object', 'Expected method to return an object.');
+    // rule only allocates cost on Saturday even though interval extends into Sunday
     assert.equal(result.cost, 1.0, 'Incorrect total cost');
   });
 
