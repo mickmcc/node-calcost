@@ -237,6 +237,28 @@ describe('CostRule - Calculate Total Cost', function() {
     assert.equal(result.cost, (1.0*1.5), 'Incorrect total cost');
   });
 
+  it('Single overlap - Pro-Rata Days, 2 weeks', function() {
+    const timespan = caltime.timeSpan(9, 0, 0, 0, 12*60); // 9:00-21:00
+    const timerule = caltime.timeRule(timespan,
+                                        caltime.constants.CONSTRAINT_DAY_OF_WEEK,
+                                        caltime.constants.SATURDAY,
+                                        TZ_UTC);
+    assert.notEqual(timerule, null, 'TimeRule object was not constructed.');
+    const costrule = tc.costruleCtor(timerule,
+                                      1.0,
+                                      tc.constants.RATETYPE_PER_DAY_PRORATA);
+    assert.notEqual(costrule, null, 'CostRule object was not constructed.');
+    // create an array of DateSpans
+    const spanH = caltime.dateSpan(dateF, null, 16*24*60); // 16 days
+    const datespans = [spanH];
+    // calculate the total cost
+    const result = costrule.totalCost(datespans);
+    assert.notEqual(result, null, 'null not expected');
+    assert.equal(typeof result, 'object', 'Expected method to return an object.');
+    // 9 hour period over 3 consecutive Saturdays
+    assert.equal(result.cost, (1.0*3.0*(12.0/24.0)), 'Incorrect total cost');
+  });
+
   /* natural rates */
   it('Single overlap - Natural Minute', function() {
     const timespan = caltime.timeSpan(9, 0, 0, 0, 12*60); // 9:00-21:00
