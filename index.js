@@ -17,18 +17,13 @@ const costruleModule = require('./lib/costrule');
 
 /* exported functional constructors *******************************************/
 
-/** Functional constructor which creates a TimeSpan object.
+/** Functional constructor which creates a CostRule object.
  * @public
  * @see {@link module:calcost/costrule~costrule} */
 module.exports.costRule = costruleModule.costRule;
 
 /* exported functions ++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
 
-/** Function used to sort DateSpan objects in an array.
- * @public
- * @see {@link module:caltime/costrule~sortCostRules}
- */
-module.exports.sortCostRules = costruleModule.sortRules;
 
 /* exported constants *********************************************************/
 
