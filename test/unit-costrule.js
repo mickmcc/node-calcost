@@ -125,9 +125,9 @@ describe('CostRule - Instantiation', function() {
   });
 });
 
-describe('CostRule - Calculate Total Cost', function() {
+describe('CostRule - Total Cost - Args', function() {
 
-  it('Bad Argument', function() {
+  it('Bad Arguments', function() {
     const timespan = caltime.timeSpan(9, 0, 0, 0, 12*60); // 9:00-21:00
     const timerule = caltime.timeRule(timespan,
                                         caltime.constants.CONSTRAINT_DAY_OF_WEEK,
@@ -151,8 +151,10 @@ describe('CostRule - Calculate Total Cost', function() {
                     Error,
                     'Expected function to throw an error (inDateSpans is an object).');
   });
+});
 
-  /* pro-rata rates */
+describe('CostRule - Total Cost - Pro-Rata', function() {
+
   it('Single overlap - Pro-Rata Milliseconds', function() {
     const timespan = caltime.timeSpan(9, 0, 0, 0, 12*60); // 9:00-21:00
     const timerule = caltime.timeRule(timespan,
@@ -258,8 +260,10 @@ describe('CostRule - Calculate Total Cost', function() {
     // 9 hour period over 3 consecutive Saturdays
     assert.equal(result.cost, (1.0*3.0*(12.0/24.0)), 'Incorrect total cost');
   });
+});
 
-  /* natural rates */
+describe('CostRule - Total Cost - Natural', function() {
+
   it('Single overlap - Natural Minute', function() {
     const timespan = caltime.timeSpan(9, 0, 0, 0, 12*60); // 9:00-21:00
     const timerule = caltime.timeRule(timespan,
@@ -352,8 +356,10 @@ describe('CostRule - Calculate Total Cost', function() {
     // rule only allocates cost on Saturday even though interval extends into Sunday
     assert.equal(result.cost, 1.0, 'Incorrect total cost');
   });
+});
 
-  /* roundup rates */
+describe('CostRule - Total Cost - Roundup', function() {
+
   it('Single overlap - Roundup Seconds', function() {
     const timespan = caltime.timeSpan(9, 0, 0, 0, 12*60); // 9:00-21:00
     const timerule = caltime.timeRule(timespan,
@@ -438,4 +444,15 @@ describe('CostRule - Calculate Total Cost', function() {
     // 9hrs + 12hrs +12hrs = 33hrs, rounded up to 2 days
     assert.equal(result.cost, 1.0*(2), 'Incorrect total cost');
   });
+});
+
+describe('CostRule - Total Cost - Overlaps', function() {
+
+
+});
+
+
+describe('CostRule - Total Cost - Remainders', function() {
+
+
 });
