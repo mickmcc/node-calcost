@@ -446,13 +446,97 @@ describe('CostRule - Total Cost - Roundup', function() {
   });
 });
 
-describe('CostRule - Total Cost - Overlaps', function() {
+describe('CostRule - Total Cost - Overlaps & Remainders', function() {
 
+  it('No overlap - Single Remainder', function() {
+    const timespan = caltime.timeSpan(13, 0, 0, 0, 1*60); // 13:00-14:00
+    const timerule = caltime.timeRule(timespan,
+                                        caltime.constants.CONSTRAINT_DAY_OF_WEEK,
+                                        caltime.constants.SATURDAY,
+                                        TZ_UTC);
+    assert.notEqual(timerule, null, 'TimeRule object was not constructed.');
+    const costrule = tc.costruleCtor(timerule,
+                                      1.0,
+                                      tc.constants.RATETYPE_PER_HOUR_PRORATA);
+    assert.notEqual(costrule, null, 'CostRule object was not constructed.');
+    // create an array of DateSpans
+    const spanA = caltime.dateSpan(dateN, null, 60, 0, 0); // 22:00-23:00
+    const datespans = [spanA];
+    // no overlap therefore no cost assigned
+    const result = costrule.totalCost(datespans);
+    assert.notEqual(result, null, 'null not expected');
+    assert.equal(typeof result, 'object', 'Expected method to return an object.');
+    assert.equal(result.cost, 0, 'Incorrect total cost');
+    assert.notEqual(result.usedSpans, null, 'null not expected');
+    assert.equal(typeof result.usedSpans, 'object', 'Expected method to return an array.');
+    assert.equal(result.usedSpans.length, 0, 'Expected method to return one date-span.');
+    assert.notEqual(result.remainderSpans, null, 'null not expected');
+    assert.equal(typeof result.remainderSpans, 'object', 'Expected method to return an array.');
+    assert.equal(result.remainderSpans.length, 1, 'Expected method to return one date-span.');
+    assert.equal(result.remainderSpans[0].getBegin().getTime(), dateN.getTime(), 'Expected a different start time for overlap');
+    assert.equal(result.remainderSpans[0].getTotalDuration(), 1 * caltime.constants.MSECS_PER_HOUR, 'Expected a 1 hour duration.');
+  });
 
-});
+  it('Single overlap - Single Remainder', function() {
+    const timespan = caltime.timeSpan(13, 0, 0, 0, 1*60); // 13:00-14:00
+    const timerule = caltime.timeRule(timespan,
+                                        caltime.constants.CONSTRAINT_DAY_OF_WEEK,
+                                        caltime.constants.SATURDAY,
+                                        TZ_UTC);
+    assert.notEqual(timerule, null, 'TimeRule object was not constructed.');
+    const costrule = tc.costruleCtor(timerule,
+                                      1.0,
+                                      tc.constants.RATETYPE_PER_HOUR_PRORATA);
+    assert.notEqual(costrule, null, 'CostRule object was not constructed.');
+    // create an array of DateSpans
+    const spanA = caltime.dateSpan(dateI, null, 120, 0, 0); // 13:00-15:00
+    const datespans = [spanA];
+    // calculate the cost for overlap between spanA and timerule
+    const result = costrule.totalCost(datespans);
+    assert.notEqual(result, null, 'null not expected');
+    assert.equal(typeof result, 'object', 'Expected method to return an object.');
+    assert.equal(result.cost, 1.0, 'Incorrect total cost');
+    assert.notEqual(result.usedSpans, null, 'null not expected');
+    assert.equal(typeof result.usedSpans, 'object', 'Expected method to return an array.');
+    assert.equal(result.usedSpans.length, 1, 'Expected method to return one date-span.');
+    assert.equal(result.usedSpans[0].getBegin().getTime(), dateI.getTime(), 'Expected a different start time for overlap');
+    assert.equal(result.usedSpans[0].getTotalDuration(), 1 * caltime.constants.MSECS_PER_HOUR, 'Expected a 1 hour duration.');
+    assert.notEqual(result.remainderSpans, null, 'null not expected');
+    assert.equal(typeof result.remainderSpans, 'object', 'Expected method to return an array.');
+    assert.equal(result.remainderSpans.length, 1, 'Expected method to return one date-span.');
+    assert.equal(result.remainderSpans[0].getTotalDuration(), 1 * caltime.constants.MSECS_PER_HOUR, 'Expected a 1 hour duration.');
+  });
 
-
-describe('CostRule - Total Cost - Remainders', function() {
-
-
+  it('Single overlap - Double Remainder', function() {
+    const timespan = caltime.timeSpan(14, 0, 0, 0, 2*60); // 13:00-15:00
+    const timerule = caltime.timeRule(timespan,
+                                        caltime.constants.CONSTRAINT_DAY_OF_WEEK,
+                                        caltime.constants.SATURDAY,
+                                        TZ_UTC);
+    assert.notEqual(timerule, null, 'TimeRule object was not constructed.');
+    const costrule = tc.costruleCtor(timerule,
+                                      1.0,
+                                      tc.constants.RATETYPE_PER_HOUR_PRORATA);
+    assert.notEqual(costrule, null, 'CostRule object was not constructed.');
+    // create an array of DateSpans
+    const spanA = caltime.dateSpan(dateI, null, 4*60, 0, 0); // 13:00-17:00
+    const datespans = [spanA];
+    // calculate the cost for overlap between spanA and timerule
+    const result = costrule.totalCost(datespans);
+    assert.notEqual(result, null, 'null not expected');
+    assert.equal(typeof result, 'object', 'Expected method to return an object.');
+    assert.equal(result.cost, 2.0, 'Incorrect total cost');
+    assert.notEqual(result.usedSpans, null, 'null not expected');
+    assert.equal(typeof result.usedSpans, 'object', 'Expected method to return an array.');
+    assert.equal(result.usedSpans.length, 1, 'Expected method to return one date-span.');
+    assert.equal(result.usedSpans[0].getBegin().getTime(), dateJ.getTime(), 'Expected a different start time for overlap');
+    assert.equal(result.usedSpans[0].getTotalDuration(), 2 * caltime.constants.MSECS_PER_HOUR, 'Expected a 2 hour duration.');
+    assert.notEqual(result.remainderSpans, null, 'null not expected');
+    assert.equal(typeof result.remainderSpans, 'object', 'Expected method to return an array.');
+    assert.equal(result.remainderSpans.length, 2, 'Expected method to return two date-spans.');
+    assert.equal(result.remainderSpans[0].getBegin().getTime(), dateI.getTime(), 'Expected a different start time for overlap');
+    assert.equal(result.remainderSpans[0].getTotalDuration(), 1 * caltime.constants.MSECS_PER_HOUR, 'Expected a 1 hour duration.');
+    assert.equal(result.remainderSpans[1].getBegin().getTime(), dateK.getTime(), 'Expected a different start time for overlap');
+    assert.equal(result.remainderSpans[1].getTotalDuration(), 1 * caltime.constants.MSECS_PER_HOUR, 'Expected a 1 hour duration.');
+  });
 });
