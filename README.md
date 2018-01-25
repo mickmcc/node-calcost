@@ -16,12 +16,12 @@ peak times and costs significantly less during the off-peak times.  Multiple
 A single other `CostRule` object is defined to cover all non-peak times.
 
 Calculating the cost of a user's usage then requires creating `DateSpan` objects
-for each interval of time the user has used the resource.  An array containing
+for each interval of time during which the user has used the resource.  An array containing
 these `DateSpan` objects is then passed to each `CostRule` for the peak times.
 This calculates the cost of resource usage during peak times.
 
 If there are any remaining `DateSpan` objects, which have not been used to
-allocate costs, these are passed to non-peak `CostRule` object. This non-peak
+allocate costs, these are passed to the non-peak `CostRule` object. This non-peak
 cost is added to the peak cost to generate the total cost of using the compute
 resource.
 
@@ -43,49 +43,51 @@ var calcost = require('calcost');
 // functional constructor to create CostRule objects
 var costrule = calcost.costRule;
 // Constants object provides all of the constants defined by the module
-var caltimeConstants = caltime.constants;
+var calcostConstants = calcost.constants;
 ```
 
 ## CostRule
 
 A `CostRule` is an immutable object which allows a time-based rule to be defined
-for the calculation of the cost of resource usage.
+for the calculation of the cost of resource usage. It provides a functional
+constructor `costRule` and a single method `totalCost` which is used to calculate
+the cost of an array of `DateSpan` objects.
 
 ### costRule()
 
 The `costRule` function is a functional constructor therefore it should not be
 called with the `new` operator. The function accepts several arguments:
-- inTimeRule. A `TimeRule` object which defines the interval of time during
+- `inTimeRule`  A `TimeRule` object which defines the interval of time during
   which the costs can be calculated using this rule.
-- inRate. Rate per unit of time. The rate is currency-agnostic.
-- inRateType. Argument describes how the costs should be calculated.
-- inWorkDayDuration. Duration of a working day in minutes.
+- `inRate`  Rate per unit of time. The rate is currency-agnostic.
+- `inRateType`  Argument describes how the costs should be calculated.
+- `inWorkDayDuration`  Duration of a working day in minutes.
 
 Valid values for `inRateType` are:
-- RATETYPE_PER_MILLISECOND. Rate is the cost per millisecond.
-- RATETYPE_PER_SECOND_PRORATA. Rate is the cost per second and/or fraction of
+- `RATETYPE_PER_MILLISECOND`  Rate is the cost per millisecond.
+- `RATETYPE_PER_SECOND_PRORATA`  Rate is the cost per second and/or fraction of
   a second.
-- RATETYPE_PER_SECOND_ROUNDUP. Rate is the cost per second. Cost is rounded up
+- `RATETYPE_PER_SECOND_ROUNDUP`  Rate is the cost per second. Cost is rounded up
   to the nearest second.
-- RATETYPE_PER_MINUTE_PRORATA. Rate is the cost per minute and/or fraction of
+- `RATETYPE_PER_MINUTE_PRORATA`  Rate is the cost per minute and/or fraction of
   a minute.
-- RATETYPE_PER_MINUTE_ROUNDUP. Rate is the cost per minute. Cost is rounded up
+- `RATETYPE_PER_MINUTE_ROUNDUP`  Rate is the cost per minute. Cost is rounded up
   to the nearest minute.
-- RATETYPE_PER_MINUTE_NATURAL. Rate is the cost per natural minute during which
+- `RATETYPE_PER_MINUTE_NATURAL`  Rate is the cost per natural minute during which
   the resource is used for any duration.
-- RATETYPE_PER_HOUR_PRORATA. Rate is the cost per hour and/or fraction of
+- `RATETYPE_PER_HOUR_PRORATA`  Rate is the cost per hour and/or fraction of
   an hour.
-- RATETYPE_PER_HOUR_ROUNDUP. Rate is the cost per hour. Cost is rounded up
+- `RATETYPE_PER_HOUR_ROUNDUP`  Rate is the cost per hour. Cost is rounded up
   to the nearest hour.
-- RATETYPE_PER_HOUR_NATURAL. Rate is the cost per natural hour during which
+- `RATETYPE_PER_HOUR_NATURAL`  Rate is the cost per natural hour during which
   the resource is used for any duration.
-- RATETYPE_PER_DAY_PRORATA. Rate is the cost per working day and/or fraction of
+- `RATETYPE_PER_DAY_PRORATA`  Rate is the cost per working day and/or fraction of
   a working day. The duration of a working day must also be passed to the
   function when using this type of rate.
-- RATETYPE_PER_DAY_ROUNDUP. Rate is the cost per working day. Cost is rounded up
+- `RATETYPE_PER_DAY_ROUNDUP`  Rate is the cost per working day. Cost is rounded up
   to the nearest full working day. The duration of a working day must also be
   passed to the function when using this type of rate.
-- RATETYPE_PER_DAY_NATURAL. Rate is the cost per working day during which the
+- `RATETYPE_PER_DAY_NATURAL`  Rate is the cost per working day during which the
   resource is used for any duration.
 
 #### Pro-Rata Rate Types
@@ -127,6 +129,16 @@ identifier and then calculates the sum of the costs accrued by all of the
 of which represents an interval of time during which no costs were accrued
 because there was no overlap with the time interval defined by the `CostRule`.
 
+```js
+var calcost = require('calcost');
+// functional constructor to create CostRule objects
+var costrule = calcost.costRule;
+// Constants object provides all of the constants defined by the module
+var calcostConstants = calcost.constants;
+
+```
+
+
 ## Constants
 
 The module makes several constants available in the `constants` object. Each
@@ -145,7 +157,7 @@ $ npm run -s doc
 
 ## Support
 
-*Bug Reports* and *New Feature Requests* should be reported at the [CalTime GitHub Issues Page](https://github.com/mickmcc/node-calcost/issues).
+*Bug Reports* and *New Feature Requests* should be reported at the [CalCost GitHub Issues Page](https://github.com/mickmcc/node-calcost/issues).
 
 
 ## Dependencies
@@ -158,7 +170,7 @@ required to test or develop `calcost`. The production dependencies are:
 
 ## License
 
-`calcost` is copyright (c) 2017 Michael McCarthy <michael.mccarthy@ieee.org>.
+`calcost` is copyright (c) 2017-2018 Michael McCarthy <michael.mccarthy@ieee.org>.
 
 `calcost` is free software, licensed under the MIT licence. See the file `LICENSE`
 in this distribution for more information.

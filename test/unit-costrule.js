@@ -26,6 +26,7 @@ const dateC = new Date(Date.UTC(2017, 6, 5, 17, 0, 0, 0)); // Last Wed. of July,
 const dateD = new Date(Date.UTC(2017, 6, 12, 16, 0, 0, 0)); // Second Wed. of July, 16:00
 const dateE = new Date(Date.UTC(2017, 6, 12, 17, 0, 0, 0)); // Second Wed. of July, 17:00
 const dateF = new Date(Date.UTC(2017, 6, 14, 12, 0, 0, 0)); // Friday 14th, 12:00
+const dateFa = new Date(Date.UTC(2017, 6, 14, 19, 0, 0, 0)); // Friday 14th, 19:00
 const dateG = new Date(Date.UTC(2017, 6, 15, 10, 0, 0, 0)); // Saturday 15th, 10:00
 const dateH = new Date(Date.UTC(2017, 6, 15, 12, 0, 0, 0)); // Saturday 15th, 12:00
 const dateHa = new Date(Date.UTC(2017, 6, 15, 12, 1, 2, 300)); // Saturday 15th, 12:01:02:300
@@ -538,5 +539,116 @@ describe('CostRule - Total Cost - Overlaps & Remainders', function() {
     assert.equal(result.remainderSpans[0].getTotalDuration(), 1 * caltime.constants.MSECS_PER_HOUR, 'Expected a 1 hour duration.');
     assert.equal(result.remainderSpans[1].getBegin().getTime(), dateK.getTime(), 'Expected a different start time for overlap');
     assert.equal(result.remainderSpans[1].getTotalDuration(), 1 * caltime.constants.MSECS_PER_HOUR, 'Expected a 1 hour duration.');
+  });
+});
+
+
+describe('CostRule - Example Use Cases', function() {
+
+  it('Compute Costs', function() {
+    // Peak during 09:00-18:00
+    const timespanPeak = caltime.timeSpan(9, 0, 0, 0, 9*60); // 09:00-18:00
+    // Tuesday Peak
+    const timeruleTuesday = caltime.timeRule(timespanPeak,
+                                              caltime.constants.CONSTRAINT_DAY_OF_WEEK,
+                                              caltime.constants.TUESDAY,
+                                              TZ_UTC);
+    assert.notEqual(timeruleTuesday, null, 'TimeRule object was not constructed.');
+    const costruleTuesday = tc.costruleCtor(timeruleTuesday,
+                                            3.0,
+                                            tc.constants.RATETYPE_PER_HOUR_PRORATA);
+    assert.notEqual(costruleTuesday, null, 'CostRule object was not constructed.');
+    // Wednesday Peak
+    const timeruleWednesday = caltime.timeRule(timespanPeak,
+                                              caltime.constants.CONSTRAINT_DAY_OF_WEEK,
+                                              caltime.constants.WEDNESDAY,
+                                              TZ_UTC);
+    assert.notEqual(timeruleWednesday, null, 'TimeRule object was not constructed.');
+    const costruleWednesday = tc.costruleCtor(timeruleWednesday,
+                                            4.0,
+                                            tc.constants.RATETYPE_PER_HOUR_PRORATA);
+    assert.notEqual(costruleWednesday, null, 'CostRule object was not constructed.');
+    // Friday Peak
+    const timeruleFriday = caltime.timeRule(timespanPeak,
+                                              caltime.constants.CONSTRAINT_DAY_OF_WEEK,
+                                              caltime.constants.FRIDAY,
+                                              TZ_UTC);
+    assert.notEqual(timeruleFriday, null, 'TimeRule object was not constructed.');
+    const costruleFriday = tc.costruleCtor(timeruleFriday,
+                                            6.0,
+                                            tc.constants.RATETYPE_PER_HOUR_PRORATA);
+    assert.notEqual(costruleFriday, null, 'CostRule object was not constructed.');
+    // Friday Off-peak
+    const timespanOffPeak = caltime.timeSpan(0, 0, 0, 0, 24*60); // 00:00 - 00:00+1
+    const timeruleOffPeakFriday = caltime.timeRule(timespanOffPeak,
+                                              caltime.constants.CONSTRAINT_DAY_OF_WEEK,
+                                              caltime.constants.FRIDAY,
+                                              TZ_UTC);
+    assert.notEqual(timeruleOffPeakFriday, null, 'TimeRule object was not constructed.');
+    const costruleOffPeakFriday = tc.costruleCtor(timeruleOffPeakFriday,
+                                                    1.0,
+                                                    tc.constants.RATETYPE_PER_HOUR_PRORATA);
+    assert.notEqual(costruleOffPeakFriday, null, 'CostRule object was not constructed.');
+    // Saturday Off-peak
+    const timeruleOffPeakSaturday = caltime.timeRule(timespanOffPeak,
+                                              caltime.constants.CONSTRAINT_DAY_OF_WEEK,
+                                              caltime.constants.SATURDAY,
+                                              TZ_UTC);
+    assert.notEqual(timeruleOffPeakSaturday, null, 'TimeRule object was not constructed.');
+    const costruleOffPeakSaturday = tc.costruleCtor(timeruleOffPeakSaturday,
+                                                    1.0,
+                                                    tc.constants.RATETYPE_PER_HOUR_PRORATA);
+    assert.notEqual(costruleOffPeakSaturday, null, 'CostRule object was not constructed.');
+    // Sunday Off-peak
+    const timeruleOffPeakSunday = caltime.timeRule(timespanOffPeak,
+                                              caltime.constants.CONSTRAINT_DAY_OF_WEEK,
+                                              caltime.constants.SUNDAY,
+                                              TZ_UTC);
+    assert.notEqual(timeruleOffPeakSunday, null, 'TimeRule object was not constructed.');
+    const costruleOffPeakSunday = tc.costruleCtor(timeruleOffPeakSunday,
+                                                    1.0,
+                                                    tc.constants.RATETYPE_PER_HOUR_PRORATA);
+    assert.notEqual(costruleOffPeakSunday, null, 'CostRule object was not constructed.');
+    // user used computing resource for ten hours during peak and 20 hours off-peak.
+    const spanA = caltime.dateSpan(dateB, null, 1*60, 0, 0); // Wednesday, 16:00 - 17:00, peak
+    const spanB = caltime.dateSpan(dateF, null, 5*60, 0, 0); // Friday, 12:00 - 17:00, peak
+    const spanC = caltime.dateSpan(dateFa, null, 4*60, 0, 0); // Friday 19:00 - 23:00, off-peak
+    const spanD = caltime.dateSpan(dateG, null, 12*60, 0, 0); // Saturday, 10:00 - 22:00, off-peak
+    const spanE = caltime.dateSpan(dateP, null, 4*60, 0, 0); // Sunday, 13:00 - 17:00, off-peak
+    const datespans = [spanA, spanB, spanC, spanD, spanE];
+    // step through the cost rules to calculate the total cost
+    let sumCost = 0.0;
+    // Tuesday
+    let ruleResult = costruleTuesday.totalCost(datespans, TZ_UTC);
+    assert.notEqual(ruleResult, null, 'null not expected');
+    assert.equal(ruleResult.cost, 0.0, 'Incorrect cost returned by cost-rule.');
+    sumCost += ruleResult.cost;
+    // Wednesday
+    ruleResult = costruleWednesday.totalCost(ruleResult.remainderSpans, TZ_UTC);
+    assert.notEqual(ruleResult, null, 'null not expected');
+    assert.equal(ruleResult.cost, 4.0, 'Incorrect cost returned by cost-rule.');
+    sumCost += ruleResult.cost;
+    // Friday
+    ruleResult = costruleFriday.totalCost(ruleResult.remainderSpans, TZ_UTC);
+    assert.notEqual(ruleResult, null, 'null not expected');
+    assert.equal(ruleResult.cost, 30.0, 'Incorrect cost returned by cost-rule.');
+    sumCost += ruleResult.cost;
+    // Friday off-peak
+    ruleResult = costruleOffPeakFriday.totalCost(ruleResult.remainderSpans, TZ_UTC);
+    assert.notEqual(ruleResult, null, 'null not expected');
+    assert.equal(ruleResult.cost, 4.0, 'Incorrect cost returned by cost-rule.');
+    sumCost += ruleResult.cost;
+    // Saturday off-peak
+    ruleResult = costruleOffPeakSaturday.totalCost(ruleResult.remainderSpans, TZ_UTC);
+    assert.notEqual(ruleResult, null, 'null not expected');
+    assert.equal(ruleResult.cost, 12.0, 'Incorrect cost returned by cost-rule.');
+    sumCost += ruleResult.cost;
+    // Sunday off-peak
+    ruleResult = costruleOffPeakSunday.totalCost(ruleResult.remainderSpans, TZ_UTC);
+    assert.notEqual(ruleResult, null, 'null not expected');
+    assert.equal(ruleResult.cost, 4.0, 'Incorrect cost returned by cost-rule.');
+    sumCost += ruleResult.cost;
+    // total cost due to all cost-rules
+    assert.equal(sumCost, 54.0, 'Incorrect total cost for all date-spans');
   });
 });
