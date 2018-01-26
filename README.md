@@ -2,26 +2,28 @@
 
 `calcost` is a Node.js module which allows you to define time-based rules for
 calculating the cost of resource usage.  The module provides `CostRule` objects
-which are used to define the rules and constraints. Several rules can be
+which are used to define the rules and their constraints. Several rules can be
 defined for a resource and then used to calculate the cost of using the
 resource.
-
-`calcost` is based on functionality which is provided by the `caltime` module.
 
 ## Example Use Case
 
 A compute resource has variable costs. The resource costs more to use during
 peak times and costs significantly less during the off-peak times.  Multiple
-`CostRule` objects are defined to cover the peak period: Monday - Friday, 8am - 8pm.
-A single other `CostRule` object is defined to cover all non-peak times.
+`CostRule` objects are defined to cover the peak periods: Monday-Friday, 8am-8pm.
+Other `CostRule` objects are defined to cover all non-peak times.
 
 Calculating the cost of a user's usage then requires creating `DateSpan` objects
 for each interval of time during which the user has used the resource.  An array containing
 these `DateSpan` objects is then passed to each `CostRule` for the peak times.
-This calculates the cost of resource usage during peak times.
+Each `CostRule` object determines if any of the `DateSpan` objects time intervals
+do overlap with any interval for which it is configured to allocate costs. The
+cost is allocated to each overlapping `DateSpan` and then the method `totalCost()`
+returns the total cost and arrays representing the overlapping (used) time intervals
+and any remainder time intervals for which costs have not been allocated.
 
 If there are any remaining `DateSpan` objects, which have not been used to
-allocate costs, these are passed to the non-peak `CostRule` object. This non-peak
+allocate costs, these are passed to the non-peak `CostRule` objects. This non-peak
 cost is added to the peak cost to generate the total cost of using the compute
 resource.
 
