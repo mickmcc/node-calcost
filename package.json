@@ -1,6 +1,6 @@
 {
   "name": "calcost",
-  "version": "1.0.3",
+  "version": "1.0.4",
   "description": "Node.js module to calculate the cost of resource usage using time-based rules.",
   "main": "index.js",
   "directories": {
@@ -47,7 +47,7 @@
   "dependencies": {
     "lodash": "^4.17",
     "moment-timezone": "^0.5",
-    "caltime": "^1.4.2"
+    "caltime": "^1.4.3"
   },
   "files": [
     "package.json",
