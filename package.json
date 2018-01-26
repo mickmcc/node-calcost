@@ -1,6 +1,6 @@
 {
   "name": "calcost",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "Node.js module to calculate the cost of resource usage using time-based rules.",
   "main": "index.js",
   "directories": {
