@@ -159,11 +159,11 @@ the non-overlapping `DateSpans` in the array `result.remainderSpans`.
 
 
 ```js
+var caltime = require('caltime');
 var calcost = require('calcost');
-// functional constructor to create CostRule objects
-var costrule = calcost.costRule;
-// Constants object provides all of the constants defined by the module
-var calcostConstants = calcost.constants;
+
+/* timezones */
+const TZ_UTC = 'Etc/UTC'; // UTC timezone
 
 // Peak during 09:00-18:00
 const timespanPeak = caltime.timeSpan(9, 0, 0, 0, 9*60); // 09:00-18:00
@@ -172,56 +172,56 @@ const timeruleTuesday = caltime.timeRule(timespanPeak,
                                           caltime.constants.CONSTRAINT_DAY_OF_WEEK,
                                           caltime.constants.TUESDAY,
                                           TZ_UTC);
-const costruleTuesday = tc.costruleCtor(timeruleTuesday,
+const costruleTuesday = costruleCtor(timeruleTuesday,
                                         3.0,
-                                        tc.constants.RATETYPE_PER_HOUR_PRORATA);
+                                        calcost.constants.RATETYPE_PER_HOUR_PRORATA);
 // Wednesday Peak
 const timeruleWednesday = caltime.timeRule(timespanPeak,
                                           caltime.constants.CONSTRAINT_DAY_OF_WEEK,
                                           caltime.constants.WEDNESDAY,
                                           TZ_UTC);
-const costruleWednesday = tc.costruleCtor(timeruleWednesday,
+const costruleWednesday = costruleCtor(timeruleWednesday,
                                         4.0,
-                                        tc.constants.RATETYPE_PER_HOUR_PRORATA);
+                                        calcost.constants.RATETYPE_PER_HOUR_PRORATA);
 // Friday Peak
 const timeruleFriday = caltime.timeRule(timespanPeak,
                                           caltime.constants.CONSTRAINT_DAY_OF_WEEK,
                                           caltime.constants.FRIDAY,
                                           TZ_UTC);
-const costruleFriday = tc.costruleCtor(timeruleFriday,
+const costruleFriday = costruleCtor(timeruleFriday,
                                         6.0,
-                                        tc.constants.RATETYPE_PER_HOUR_PRORATA);
+                                        calcost.constants.RATETYPE_PER_HOUR_PRORATA);
 // Friday Off-peak
 const timespanOffPeak = caltime.timeSpan(0, 0, 0, 0, 24*60); // 00:00 - 00:00+1
 const timeruleOffPeakFriday = caltime.timeRule(timespanOffPeak,
                                           caltime.constants.CONSTRAINT_DAY_OF_WEEK,
                                           caltime.constants.FRIDAY,
                                           TZ_UTC);
-const costruleOffPeakFriday = tc.costruleCtor(timeruleOffPeakFriday,
+const costruleOffPeakFriday = costruleCtor(timeruleOffPeakFriday,
                                                 1.0,
-                                                tc.constants.RATETYPE_PER_HOUR_PRORATA);
+                                                calcost.constants.RATETYPE_PER_HOUR_PRORATA);
 // Saturday Off-peak
 const timeruleOffPeakSaturday = caltime.timeRule(timespanOffPeak,
                                           caltime.constants.CONSTRAINT_DAY_OF_WEEK,
                                           caltime.constants.SATURDAY,
                                           TZ_UTC);
-const costruleOffPeakSaturday = tc.costruleCtor(timeruleOffPeakSaturday,
+const costruleOffPeakSaturday = costruleCtor(timeruleOffPeakSaturday,
                                                 1.0,
-                                                tc.constants.RATETYPE_PER_HOUR_PRORATA);
+                                                calcost.constants.RATETYPE_PER_HOUR_PRORATA);
 // Sunday Off-peak
 const timeruleOffPeakSunday = caltime.timeRule(timespanOffPeak,
                                           caltime.constants.CONSTRAINT_DAY_OF_WEEK,
                                           caltime.constants.SUNDAY,
                                           TZ_UTC);
-const costruleOffPeakSunday = tc.costruleCtor(timeruleOffPeakSunday,
+const costruleOffPeakSunday = costruleCtor(timeruleOffPeakSunday,
                                                 1.0,
-                                                tc.constants.RATETYPE_PER_HOUR_PRORATA);
-// user used computing resource for ten hours during peak and 20 hours off-peak.
-const spanA = caltime.dateSpan(dateB, null, 1*60, 0, 0); // Wednesday, 16:00 - 17:00, peak
-const spanB = caltime.dateSpan(dateF, null, 5*60, 0, 0); // Friday, 12:00 - 17:00, peak
-const spanC = caltime.dateSpan(dateFa, null, 4*60, 0, 0); // Friday 19:00 - 23:00, off-peak
-const spanD = caltime.dateSpan(dateG, null, 12*60, 0, 0); // Saturday, 10:00 - 22:00, off-peak
-const spanE = caltime.dateSpan(dateP, null, 4*60, 0, 0); // Sunday, 13:00 - 17:00, off-peak
+                                                calcost.constants.RATETYPE_PER_HOUR_PRORATA);
+// resource used for 6 hours during peak and 20 hours off-peak.
+const spanA = caltime.dateSpan(dateB, null, 1*60, 0, 0); // Wednesday, 16:00 - 17:00, 1 hr. peak
+const spanB = caltime.dateSpan(dateF, null, 5*60, 0, 0); // Friday, 12:00 - 17:00, 5 hrs. peak
+const spanC = caltime.dateSpan(dateFa, null, 4*60, 0, 0); // Friday 19:00 - 23:00, 4 hrs. off-peak
+const spanD = caltime.dateSpan(dateG, null, 12*60, 0, 0); // Saturday, 10:00 - 22:00, 12 hrs. off-peak
+const spanE = caltime.dateSpan(dateP, null, 4*60, 0, 0); // Sunday, 13:00 - 17:00, 4 hrs. off-peak
 const datespans = [spanA, spanB, spanC, spanD, spanE];
 // step through the cost rules to calculate the total cost
 let sumCost = 0.0;
@@ -251,8 +251,9 @@ console.log(`Total cost of resource usage: ${sumCost}`); // 54.0
 ## Constants
 
 The module makes several constants available in the `constants` object. Each
-constant is a data member of this object. Constants are available which can
-be used to convert values between different units of time.
+constant is a data member of this object. These constants define the way the
+costs are calculated for a specific `CostRule` when they are passed to the
+`inRateType` parameter of the `costRule` functional constructor.
 
 ## API Documentation
 
