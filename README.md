@@ -123,11 +123,40 @@ default but this can be any value between 0 and 24 hours.
 
 ### totalCost()
 
-This method takes an array of `DateSpan` objects and an optional timezone
-identifier and then calculates the sum of the costs accrued by all of the
-`DateSpan` objects. An array of `DateSpan` objects is also returned, each
-of which represents an interval of time during which no costs were accrued
-because there was no overlap with the time interval defined by the `CostRule`.
+This method takes an array of `DateSpan` objects, an optional timezone
+identifier, and then calculates the sum of the costs due to all of the
+`DateSpan` objects for a specific `CostRule`. The method returns and object
+with three data members:
+- `cost`. A number containing the total sum of all of the costs accumulated by
+`DateSpan` objects which overlapped with the time-spans defined by the `CostRule`.
+- `usedSpans`: An array of `DateSpan` objects, each of which indicates an interval
+of time for which there was an overlap and costs were accumulated by the `CostRule`.
+- `remainderSpans`: An array of remainder `DateSpan` objects, each of which
+represents an interval of time during which no costs were accrued because there
+was no overlap with the time interval defined by the `CostRule`.
+
+The following example code is based on a test case which is available in the
+file `unit-costrule.js`. Several cost rules are defined, both for peak and
+non-peak times during the week. The times are defined as:
+- Tuesday from 9am-6pm at a cost of 3 units per pro-rata hour of resource usage.
+- Wednesday from 9am-6pm at a cost of 4 units per pro-rata hour of resource usage.
+- Friday from 9am-6pm at a cost of 6 units per pro-rata hour of resource usage.
+- Friday off-peak from midnight-midnight at a cost of 1 unit per pro-rata hour of resource usage.
+- Saturday off-peak from midnight-midnight at a cost of 1 unit per pro-rata hour of resource usage.
+- Sunday off-peak from midnight-midnight at a cost of 1 unit per pro-rata hour of resource usage.
+
+The actual resource is used during a combination of peak and non-peak times:
+- Wednesday 5.7.2017, 16:00 - 17:00. 1 hour during peak period.
+- Friday 14.7.2017, 12:00 - 17:00. 5 hours during peak period.
+- Friday 14.7.2017, 19:00 - 23:00. 4 hours during non-peak period.
+- Saturday 15.7.2017, 10:00 - 22:00. 12 hours during non-peak period.
+- Sunday 16.7.2017, 13:00 - 17:00. 4 hours during non-peak period.
+
+The `CostRule` objects are used in order of their priority i.e. peak cost rules are
+applied before non-peak cost rules are applied. If a `CostRule` does not overlap
+with a date-span of resource usage, then the `totalCost()` method will return
+the non-overlapping `DateSpans` in the array `result.remainderSpans`.
+
 
 ```js
 var calcost = require('calcost');
@@ -136,6 +165,86 @@ var costrule = calcost.costRule;
 // Constants object provides all of the constants defined by the module
 var calcostConstants = calcost.constants;
 
+// Peak during 09:00-18:00
+const timespanPeak = caltime.timeSpan(9, 0, 0, 0, 9*60); // 09:00-18:00
+// Tuesday Peak
+const timeruleTuesday = caltime.timeRule(timespanPeak,
+                                          caltime.constants.CONSTRAINT_DAY_OF_WEEK,
+                                          caltime.constants.TUESDAY,
+                                          TZ_UTC);
+const costruleTuesday = tc.costruleCtor(timeruleTuesday,
+                                        3.0,
+                                        tc.constants.RATETYPE_PER_HOUR_PRORATA);
+// Wednesday Peak
+const timeruleWednesday = caltime.timeRule(timespanPeak,
+                                          caltime.constants.CONSTRAINT_DAY_OF_WEEK,
+                                          caltime.constants.WEDNESDAY,
+                                          TZ_UTC);
+const costruleWednesday = tc.costruleCtor(timeruleWednesday,
+                                        4.0,
+                                        tc.constants.RATETYPE_PER_HOUR_PRORATA);
+// Friday Peak
+const timeruleFriday = caltime.timeRule(timespanPeak,
+                                          caltime.constants.CONSTRAINT_DAY_OF_WEEK,
+                                          caltime.constants.FRIDAY,
+                                          TZ_UTC);
+const costruleFriday = tc.costruleCtor(timeruleFriday,
+                                        6.0,
+                                        tc.constants.RATETYPE_PER_HOUR_PRORATA);
+// Friday Off-peak
+const timespanOffPeak = caltime.timeSpan(0, 0, 0, 0, 24*60); // 00:00 - 00:00+1
+const timeruleOffPeakFriday = caltime.timeRule(timespanOffPeak,
+                                          caltime.constants.CONSTRAINT_DAY_OF_WEEK,
+                                          caltime.constants.FRIDAY,
+                                          TZ_UTC);
+const costruleOffPeakFriday = tc.costruleCtor(timeruleOffPeakFriday,
+                                                1.0,
+                                                tc.constants.RATETYPE_PER_HOUR_PRORATA);
+// Saturday Off-peak
+const timeruleOffPeakSaturday = caltime.timeRule(timespanOffPeak,
+                                          caltime.constants.CONSTRAINT_DAY_OF_WEEK,
+                                          caltime.constants.SATURDAY,
+                                          TZ_UTC);
+const costruleOffPeakSaturday = tc.costruleCtor(timeruleOffPeakSaturday,
+                                                1.0,
+                                                tc.constants.RATETYPE_PER_HOUR_PRORATA);
+// Sunday Off-peak
+const timeruleOffPeakSunday = caltime.timeRule(timespanOffPeak,
+                                          caltime.constants.CONSTRAINT_DAY_OF_WEEK,
+                                          caltime.constants.SUNDAY,
+                                          TZ_UTC);
+const costruleOffPeakSunday = tc.costruleCtor(timeruleOffPeakSunday,
+                                                1.0,
+                                                tc.constants.RATETYPE_PER_HOUR_PRORATA);
+// user used computing resource for ten hours during peak and 20 hours off-peak.
+const spanA = caltime.dateSpan(dateB, null, 1*60, 0, 0); // Wednesday, 16:00 - 17:00, peak
+const spanB = caltime.dateSpan(dateF, null, 5*60, 0, 0); // Friday, 12:00 - 17:00, peak
+const spanC = caltime.dateSpan(dateFa, null, 4*60, 0, 0); // Friday 19:00 - 23:00, off-peak
+const spanD = caltime.dateSpan(dateG, null, 12*60, 0, 0); // Saturday, 10:00 - 22:00, off-peak
+const spanE = caltime.dateSpan(dateP, null, 4*60, 0, 0); // Sunday, 13:00 - 17:00, off-peak
+const datespans = [spanA, spanB, spanC, spanD, spanE];
+// step through the cost rules to calculate the total cost
+let sumCost = 0.0;
+// Tuesday
+let ruleResult = costruleTuesday.totalCost(datespans, TZ_UTC);
+sumCost += ruleResult.cost;
+// Wednesday
+ruleResult = costruleWednesday.totalCost(ruleResult.remainderSpans, TZ_UTC);
+sumCost += ruleResult.cost;
+// Friday
+ruleResult = costruleFriday.totalCost(ruleResult.remainderSpans, TZ_UTC);
+sumCost += ruleResult.cost;
+// Friday off-peak
+ruleResult = costruleOffPeakFriday.totalCost(ruleResult.remainderSpans, TZ_UTC);
+sumCost += ruleResult.cost;
+// Saturday off-peak
+ruleResult = costruleOffPeakSaturday.totalCost(ruleResult.remainderSpans, TZ_UTC);
+sumCost += ruleResult.cost;
+// Sunday off-peak
+ruleResult = costruleOffPeakSunday.totalCost(ruleResult.remainderSpans, TZ_UTC);
+sumCost += ruleResult.cost;
+// total cost due to all cost-rules
+console.log(`Total cost of resource usage: ${sumCost}`); // 54.0
 ```
 
 
