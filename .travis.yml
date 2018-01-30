@@ -1,0 +1,12 @@
+language: node_js
+node_js:
+  - "node"
+
+sudo: false
+
+install: npm install
+
+script: npm run -s test
+
+git:
+  depth: 10
