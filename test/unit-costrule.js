@@ -240,7 +240,7 @@ describe('CostRule - Total Cost - Pro-Rata', function() {
     assert.equal(result.cost, (1.0*1.5), 'Incorrect total cost');
   });
 
-  it('Single overlap - Pro-Rata Days, 2 weeks', function() {
+  it('Single overlap - Pro-Rata Days, default work-day', function() {
     const timespan = caltime.timeSpan(9, 0, 0, 0, 12*60); // 9:00-21:00
     const timerule = caltime.timeRule(timespan,
                                         caltime.constants.CONSTRAINT_DAY_OF_WEEK,
@@ -252,14 +252,64 @@ describe('CostRule - Total Cost - Pro-Rata', function() {
                                       tc.constants.RATETYPE_PER_DAY_PRORATA);
     assert.notEqual(costrule, null, 'CostRule object was not constructed.');
     // create an array of DateSpans
-    const spanH = caltime.dateSpan(dateF, null, 16*24*60); // 16 days
+    const spanH = caltime.dateSpan(dateF, null, 16*24*60); // Friday 12:00 + 16 days
     const datespans = [spanH];
     // calculate the total cost
     const result = costrule.totalCost(datespans);
     assert.notEqual(result, null, 'null not expected');
     assert.equal(typeof result, 'object', 'Expected method to return an object.');
-    // 9 hour period over 3 consecutive Saturdays
-    assert.equal(result.cost, (1.0*3.0*(12.0/24.0)), 'Incorrect total cost');
+    // 12hr + 12hr + 12hr = 36hrs
+    assert.equal(result.cost, (1.0*(36.0/8.0)), 'Incorrect total cost');
+  });
+
+  it('Single overlap - Pro-Rata Days, 10 hour work-day', function() {
+    const timespan = caltime.timeSpan(10, 0, 0, 0, 12*60); // 10:00-22:00
+    const timerule = caltime.timeRule(timespan,
+                                        caltime.constants.CONSTRAINT_DAY_OF_WEEK,
+                                        caltime.constants.SATURDAY,
+                                        TZ_UTC);
+    assert.notEqual(timerule, null, 'TimeRule object was not constructed.');
+    const costrule = tc.costruleCtor(timerule,
+                                      1.0,
+                                      tc.constants.RATETYPE_PER_DAY_PRORATA,
+                                      (10.0 * 60));
+    assert.notEqual(costrule, null, 'CostRule object was not constructed.');
+    // create an array of DateSpans
+    const spanH = caltime.dateSpan(dateG, null, 2*24*60); // Sat. & Sunday
+    const datespans = [spanH];
+    // check work-day duration was set correctly
+    assert.equal(costrule.getWorkDayDuration(), (10.0*60), 'CostRule has incorrect work-day duration');
+    // calculate the total cost
+    const result = costrule.totalCost(datespans);
+    assert.notEqual(result, null, 'null not expected');
+    assert.equal(typeof result, 'object', 'Expected method to return an object.');
+    // 12 hours on Sat. = 1.2 work-days
+    assert.equal(result.cost, (1.0*(12.0/10.0)), 'Incorrect total cost');
+  });
+
+  it('Single overlap - Pro-Rata Days, 24 hour work-day', function() {
+    const timespan = caltime.timeSpan(10, 0, 0, 0, 12*60); // 10:00-22:00
+    const timerule = caltime.timeRule(timespan,
+                                        caltime.constants.CONSTRAINT_DAY_OF_WEEK,
+                                        caltime.constants.SATURDAY,
+                                        TZ_UTC);
+    assert.notEqual(timerule, null, 'TimeRule object was not constructed.');
+    const costrule = tc.costruleCtor(timerule,
+                                      1.0,
+                                      tc.constants.RATETYPE_PER_DAY_PRORATA,
+                                      (24.0 * 60));
+    assert.notEqual(costrule, null, 'CostRule object was not constructed.');
+    // create an array of DateSpans
+    const spanH = caltime.dateSpan(dateG, null, 2*24*60); // Sat. & Sunday
+    const datespans = [spanH];
+    // check work-day duration was set correctly
+    assert.equal(costrule.getWorkDayDuration(), (24.0*60), 'CostRule has incorrect work-day duration');
+    // calculate the total cost
+    const result = costrule.totalCost(datespans);
+    assert.notEqual(result, null, 'null not expected');
+    assert.equal(typeof result, 'object', 'Expected method to return an object.');
+    // 12 hours on Sat. = 1.2 work-days
+    assert.equal(result.cost, (1.0*(12.0/24.0)), 'Incorrect total cost');
   });
 });
 
@@ -424,7 +474,7 @@ describe('CostRule - Total Cost - Roundup', function() {
     assert.equal(result.cost, 1.0*(3), 'Incorrect total cost');
   });
 
-  it('Single overlap - Roundup Days', function() {
+  it('Single overlap - Roundup Days, default work-day', function() {
     const timespan = caltime.timeSpan(9, 0, 0, 0, 12*60); // 9:00-21:00
     const timerule = caltime.timeRule(timespan,
                                         caltime.constants.CONSTRAINT_DAY_OF_WEEK,
@@ -436,14 +486,60 @@ describe('CostRule - Total Cost - Roundup', function() {
                                       tc.constants.RATETYPE_PER_DAY_ROUNDUP);
     assert.notEqual(costrule, null, 'CostRule object was not constructed.');
     // create an array of DateSpans
-    const spanH = caltime.dateSpan(dateH, null, 16*(24*60), 0, 0);
+    const spanH = caltime.dateSpan(dateH, null, 16*(24*60), 0, 0); // 16 days i.e. 3 Saturdays
     const datespans = [spanH];
     // calculate the total cost
     const result = costrule.totalCost(datespans);
     assert.notEqual(result, null, 'null not expected');
     assert.equal(typeof result, 'object', 'Expected method to return an object.');
-    // 9hrs + 12hrs +12hrs = 33hrs, rounded up to 2 days
-    assert.equal(result.cost, 1.0*(2), 'Incorrect total cost');
+    // 9hrs + 12hrs +12hrs = 33hrs i.e. (33/8) 4.125 work-days rounded-up to 5.
+    assert.equal(result.cost, 1.0*5, 'Incorrect total cost');
+  });
+
+  it('Single overlap - Roundup Days, 10 hour work-day', function() {
+    const timespan = caltime.timeSpan(10, 0, 0, 0, 12*60); // 10:00-22:00
+    const timerule = caltime.timeRule(timespan,
+                                        caltime.constants.CONSTRAINT_DAY_OF_WEEK,
+                                        caltime.constants.SATURDAY,
+                                        TZ_UTC);
+    assert.notEqual(timerule, null, 'TimeRule object was not constructed.');
+    const costrule = tc.costruleCtor(timerule,
+                                      1.0,
+                                      tc.constants.RATETYPE_PER_DAY_ROUNDUP,
+                                      (10.0*60));
+    assert.notEqual(costrule, null, 'CostRule object was not constructed.');
+    // create an array of DateSpans
+    const spanH = caltime.dateSpan(dateG, null, 2*(24*60), 0, 0); // 10:00am
+    const datespans = [spanH];
+    // calculate the total cost
+    const result = costrule.totalCost(datespans);
+    assert.notEqual(result, null, 'null not expected');
+    assert.equal(typeof result, 'object', 'Expected method to return an object.');
+    // 12 hours = 1.2 work-days, rounded up to 2 work-days
+    assert.equal(result.cost, (1.0*2.0), 'Incorrect total cost');
+  });
+
+  it('Single overlap - Roundup Days, 24 hour work-day', function() {
+    const timespan = caltime.timeSpan(10, 0, 0, 0, 12*60); // 10:00-22:00
+    const timerule = caltime.timeRule(timespan,
+                                        caltime.constants.CONSTRAINT_DAY_OF_WEEK,
+                                        caltime.constants.SATURDAY,
+                                        TZ_UTC);
+    assert.notEqual(timerule, null, 'TimeRule object was not constructed.');
+    const costrule = tc.costruleCtor(timerule,
+                                      1.0,
+                                      tc.constants.RATETYPE_PER_DAY_ROUNDUP,
+                                      (24.0*60));
+    assert.notEqual(costrule, null, 'CostRule object was not constructed.');
+    // create an array of DateSpans
+    const spanH = caltime.dateSpan(dateG, null, 2*(24*60), 0, 0); // 10:00am-
+    const datespans = [spanH];
+    // calculate the total cost
+    const result = costrule.totalCost(datespans);
+    assert.notEqual(result, null, 'null not expected');
+    assert.equal(typeof result, 'object', 'Expected method to return an object.');
+    // 12 hours = 0.5 work-days, rounded up to 1 work-day
+    assert.equal(result.cost, 1.0*(1.0), 'Incorrect total cost');
   });
 });
 
