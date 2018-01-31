@@ -311,6 +311,28 @@ describe('CostRule - Total Cost - Pro-Rata', function() {
     // 12 hours on Sat. = 1.2 work-days
     assert.equal(result.cost, (1.0*(12.0/24.0)), 'Incorrect total cost');
   });
+
+  it('Single overlap - Pro-Rata Days, full working week rule', function() {
+    const timespan = caltime.timeSpan(9, 0, 0, 0, 12*60); // 9:00-21:00
+    const timerule = caltime.timeRule(timespan,
+                                        caltime.constants.CONSTRAINT_DAY_OF_WEEK,
+                                        caltime.constants.WEEKDAYS_MON_SUN,
+                                        TZ_UTC);
+    assert.notEqual(timerule, null, 'TimeRule object was not constructed.');
+    const costrule = tc.costruleCtor(timerule,
+                                      1.0,
+                                      tc.constants.RATETYPE_PER_DAY_PRORATA);
+    assert.notEqual(costrule, null, 'CostRule object was not constructed.');
+    // create an array of DateSpans
+    const spanH = caltime.dateSpan(dateF, null, 4*24*60); // Friday 12:00 + 4 days
+    const datespans = [spanH];
+    // calculate the total cost
+    const result = costrule.totalCost(datespans);
+    assert.notEqual(result, null, 'null not expected');
+    assert.equal(typeof result, 'object', 'Expected method to return an object.');
+    // 9hr + 12hr + 12hr + 12hr + 3hr = 48hrs
+    assert.equal(result.cost, (1.0*(48.0/8.0)), 'Incorrect total cost');
+  });
 });
 
 describe('CostRule - Total Cost - Natural', function() {
@@ -641,6 +663,37 @@ describe('CostRule - Total Cost - Overlaps & Remainders', function() {
 
 describe('CostRule - Example Use Cases', function() {
 
+  it('Simple Compute Costs', function() {
+    // Peak during 09:00-18:00
+    const timespanPeak = caltime.timeSpan(9, 0, 0, 0, 9*60); // 09:00-18:00
+    // Peak
+    const timerulePeak = caltime.timeRule(timespanPeak,
+                                              caltime.constants.CONSTRAINT_DAY_OF_WEEK,
+                                              caltime.constants.WEEKDAYS_MON_SUN,
+                                              TZ_UTC);
+    assert.notEqual(timerulePeak, null, 'TimeRule object was not constructed.');
+    const costrulePeak = tc.costruleCtor(timerulePeak,
+                                            3.0,
+                                            tc.constants.RATETYPE_PER_HOUR_PRORATA);
+    assert.notEqual(costrulePeak, null, 'CostRule object was not constructed.');
+    // user used computing resource for 30 hours during peak times.
+    const spanA = caltime.dateSpan(dateB, null, 1*60, 0, 0); // Wednesday, 16:00 - 17:00, peak
+    const spanB = caltime.dateSpan(dateF, null, 5*60, 0, 0); // Friday, 12:00 - 17:00, peak
+    const spanC = caltime.dateSpan(dateFa, null, 4*60, 0, 0); // Friday 19:00 - 23:00, peak
+    const spanD = caltime.dateSpan(dateG, null, 12*60, 0, 0); // Saturday, 10:00 - 22:00, peak
+    const spanE = caltime.dateSpan(dateP, null, 4*60, 0, 0); // Sunday, 13:00 - 17:00, peak
+    const datespans = [spanA, spanB, spanC, spanD, spanE];
+    // step through the cost rules to calculate the total cost
+    let sumCost = 0.0;
+    // Peak
+    let ruleResult = costrulePeak.totalCost(datespans, TZ_UTC);
+    assert.notEqual(ruleResult, null, 'null not expected');
+    assert.equal(ruleResult.cost, 30.0, 'Incorrect cost returned by cost-rule.');
+    sumCost += ruleResult.cost;
+    // total cost due to all cost-rules
+    assert.equal(sumCost, 30.0, 'Incorrect total cost for all date-spans');
+  });
+
   it('Compute Costs', function() {
     // Peak during 09:00-18:00
     const timespanPeak = caltime.timeSpan(9, 0, 0, 0, 9*60); // 09:00-18:00
@@ -674,37 +727,17 @@ describe('CostRule - Example Use Cases', function() {
                                             6.0,
                                             tc.constants.RATETYPE_PER_HOUR_PRORATA);
     assert.notEqual(costruleFriday, null, 'CostRule object was not constructed.');
-    // Friday Off-peak
+    // Off-peak is all 7 days of the week
     const timespanOffPeak = caltime.timeSpan(0, 0, 0, 0, 24*60); // 00:00 - 00:00+1
-    const timeruleOffPeakFriday = caltime.timeRule(timespanOffPeak,
+    const timeruleOffPeak = caltime.timeRule(timespanOffPeak,
                                               caltime.constants.CONSTRAINT_DAY_OF_WEEK,
-                                              caltime.constants.FRIDAY,
+                                              caltime.constants.WEEKDAYS_MON_SUN,
                                               TZ_UTC);
-    assert.notEqual(timeruleOffPeakFriday, null, 'TimeRule object was not constructed.');
-    const costruleOffPeakFriday = tc.costruleCtor(timeruleOffPeakFriday,
+    assert.notEqual(timeruleOffPeak, null, 'TimeRule object was not constructed.');
+    const costruleOffPeak = tc.costruleCtor(timeruleOffPeak,
                                                     1.0,
                                                     tc.constants.RATETYPE_PER_HOUR_PRORATA);
-    assert.notEqual(costruleOffPeakFriday, null, 'CostRule object was not constructed.');
-    // Saturday Off-peak
-    const timeruleOffPeakSaturday = caltime.timeRule(timespanOffPeak,
-                                              caltime.constants.CONSTRAINT_DAY_OF_WEEK,
-                                              caltime.constants.SATURDAY,
-                                              TZ_UTC);
-    assert.notEqual(timeruleOffPeakSaturday, null, 'TimeRule object was not constructed.');
-    const costruleOffPeakSaturday = tc.costruleCtor(timeruleOffPeakSaturday,
-                                                    1.0,
-                                                    tc.constants.RATETYPE_PER_HOUR_PRORATA);
-    assert.notEqual(costruleOffPeakSaturday, null, 'CostRule object was not constructed.');
-    // Sunday Off-peak
-    const timeruleOffPeakSunday = caltime.timeRule(timespanOffPeak,
-                                              caltime.constants.CONSTRAINT_DAY_OF_WEEK,
-                                              caltime.constants.SUNDAY,
-                                              TZ_UTC);
-    assert.notEqual(timeruleOffPeakSunday, null, 'TimeRule object was not constructed.');
-    const costruleOffPeakSunday = tc.costruleCtor(timeruleOffPeakSunday,
-                                                    1.0,
-                                                    tc.constants.RATETYPE_PER_HOUR_PRORATA);
-    assert.notEqual(costruleOffPeakSunday, null, 'CostRule object was not constructed.');
+    assert.notEqual(costruleOffPeak, null, 'CostRule object was not constructed.');
     // user used computing resource for ten hours during peak and 20 hours off-peak.
     const spanA = caltime.dateSpan(dateB, null, 1*60, 0, 0); // Wednesday, 16:00 - 17:00, peak
     const spanB = caltime.dateSpan(dateF, null, 5*60, 0, 0); // Friday, 12:00 - 17:00, peak
@@ -729,20 +762,12 @@ describe('CostRule - Example Use Cases', function() {
     assert.notEqual(ruleResult, null, 'null not expected');
     assert.equal(ruleResult.cost, 30.0, 'Incorrect cost returned by cost-rule.');
     sumCost += ruleResult.cost;
-    // Friday off-peak
-    ruleResult = costruleOffPeakFriday.totalCost(ruleResult.remainderSpans, TZ_UTC);
+    // Off-peak
+    console.log(`pre remainders: ${ruleResult.remainderSpans}`); // debug
+    ruleResult = costruleOffPeak.totalCost(ruleResult.remainderSpans, TZ_UTC);
+    console.log(`post remainders: ${ruleResult.remainderSpans}`); // debug
     assert.notEqual(ruleResult, null, 'null not expected');
-    assert.equal(ruleResult.cost, 4.0, 'Incorrect cost returned by cost-rule.');
-    sumCost += ruleResult.cost;
-    // Saturday off-peak
-    ruleResult = costruleOffPeakSaturday.totalCost(ruleResult.remainderSpans, TZ_UTC);
-    assert.notEqual(ruleResult, null, 'null not expected');
-    assert.equal(ruleResult.cost, 12.0, 'Incorrect cost returned by cost-rule.');
-    sumCost += ruleResult.cost;
-    // Sunday off-peak
-    ruleResult = costruleOffPeakSunday.totalCost(ruleResult.remainderSpans, TZ_UTC);
-    assert.notEqual(ruleResult, null, 'null not expected');
-    assert.equal(ruleResult.cost, 4.0, 'Incorrect cost returned by cost-rule.');
+    assert.equal(ruleResult.cost, 20.0, 'Incorrect cost returned by cost-rule.');
     sumCost += ruleResult.cost;
     // total cost due to all cost-rules
     assert.equal(sumCost, 54.0, 'Incorrect total cost for all date-spans');
