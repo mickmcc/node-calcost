@@ -665,7 +665,7 @@ describe('CostRule - Example Use Cases', function() {
 
   it('Simple Compute Costs', function() {
     // Peak during 09:00-18:00
-    const timespanPeak = caltime.timeSpan(9, 0, 0, 0, 9*60); // 09:00-18:00
+    const timespanPeak = caltime.timeSpan(1, 0, 0, 0, 22*60); // 01:00-23:00
     // Peak
     const timerulePeak = caltime.timeRule(timespanPeak,
                                               caltime.constants.CONSTRAINT_DAY_OF_WEEK,
@@ -673,25 +673,20 @@ describe('CostRule - Example Use Cases', function() {
                                               TZ_UTC);
     assert.notEqual(timerulePeak, null, 'TimeRule object was not constructed.');
     const costrulePeak = tc.costruleCtor(timerulePeak,
-                                            3.0,
+                                            1.0,
                                             tc.constants.RATETYPE_PER_HOUR_PRORATA);
     assert.notEqual(costrulePeak, null, 'CostRule object was not constructed.');
-    // user used computing resource for 30 hours during peak times.
-    const spanA = caltime.dateSpan(dateB, null, 1*60, 0, 0); // Wednesday, 16:00 - 17:00, peak
-    const spanB = caltime.dateSpan(dateF, null, 5*60, 0, 0); // Friday, 12:00 - 17:00, peak
-    const spanC = caltime.dateSpan(dateFa, null, 4*60, 0, 0); // Friday 19:00 - 23:00, peak
-    const spanD = caltime.dateSpan(dateG, null, 12*60, 0, 0); // Saturday, 10:00 - 22:00, peak
-    const spanE = caltime.dateSpan(dateP, null, 4*60, 0, 0); // Sunday, 13:00 - 17:00, peak
+    // user used computing resource for 26 hours.
+    const spanA = caltime.dateSpan(dateB, null, 1*60, 0, 0); // Wednesday, 16:00 - 17:00
+    const spanB = caltime.dateSpan(dateF, null, 5*60, 0, 0); // Friday, 12:00 - 17:00
+    const spanC = caltime.dateSpan(dateFa, null, 4*60, 0, 0); // Friday 19:00 - 23:00
+    const spanD = caltime.dateSpan(dateG, null, 12*60, 0, 0); // Saturday, 10:00 - 22:00
+    const spanE = caltime.dateSpan(dateP, null, 4*60, 0, 0); // Sunday, 13:00 - 17:00
     const datespans = [spanA, spanB, spanC, spanD, spanE];
-    // step through the cost rules to calculate the total cost
-    let sumCost = 0.0;
-    // Peak
+    // calculate cost of date-spans
     let ruleResult = costrulePeak.totalCost(datespans, TZ_UTC);
     assert.notEqual(ruleResult, null, 'null not expected');
-    assert.equal(ruleResult.cost, 30.0, 'Incorrect cost returned by cost-rule.');
-    sumCost += ruleResult.cost;
-    // total cost due to all cost-rules
-    assert.equal(sumCost, 30.0, 'Incorrect total cost for all date-spans');
+    assert.equal(ruleResult.cost, 26.0, 'Incorrect cost returned by cost-rule.');
   });
 
   it('Compute Costs', function() {
@@ -763,9 +758,7 @@ describe('CostRule - Example Use Cases', function() {
     assert.equal(ruleResult.cost, 30.0, 'Incorrect cost returned by cost-rule.');
     sumCost += ruleResult.cost;
     // Off-peak
-    console.log(`pre remainders: ${ruleResult.remainderSpans}`); // debug
     ruleResult = costruleOffPeak.totalCost(ruleResult.remainderSpans, TZ_UTC);
-    console.log(`post remainders: ${ruleResult.remainderSpans}`); // debug
     assert.notEqual(ruleResult, null, 'null not expected');
     assert.equal(ruleResult.cost, 20.0, 'Incorrect cost returned by cost-rule.');
     sumCost += ruleResult.cost;
